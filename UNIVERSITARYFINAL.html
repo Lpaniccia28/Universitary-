@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Juego Universitari — Pro (Showcase Unificado)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0b0b0f; --fg:#e5e7eb; --card:#12121a; --accent:#ff3b3b; --muted:#9ca3af; --good:#22c55e; --bad:#ef4444; --info:#38bdf8;
+    }
+    [data-theme="oscuro"] { --bg:#0b0b0f; --fg:#e5e7eb; --card:#12121a; --accent:#ff3b3b; --muted:#9ca3af; --good:#22c55e; --bad:#ef4444; --info:#38bdf8; }
+    [data-theme="claro"] { --bg:#f6f7fb; --fg:#111827; --card:#ffffff; --accent:#4f46e5; --muted:#6b7280; --good:#16a34a; --bad:#dc2626; --info:#0ea5e9; }
+    [data-theme="neon"]  { --bg:#050510; --fg:#e5e5ff; --card:#0b0b22; --accent:#00ff88; --muted:#9ca3af; --good:#00ffa3; --bad:#ff3377; --info:#00e5ff; }
+    [data-theme="gamer"] { --bg:#0b0b0f; --fg:#e5e7eb; --card:#12121a; --accent:#ff3b3b; --muted:#9ca3af; --good:#22c55e; --bad:#ef4444; --info:#38bdf8; }
+
+    *{box-sizing:border-box}
+    html, body{height:100%}
+    body{
+      margin:0;background:var(--bg);color:var(--fg);
+      font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      display:flex;justify-content:center;align-items:flex-start;min-height:100vh;
+      padding:24px;transition:align-items .25s ease;
+    }
+    body.in-quiz{align-items:center;}
+    .container{width:100%;max-width:1100px}
+    .card{background:var(--card);border:1px solid rgba(0,0,0,.1);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:16px}
+    h1{margin:.25rem 0 1rem;font-size:clamp(1.4rem,2.6vw,2.2rem)}
+    h2{margin:.25rem 0 .75rem;font-size:clamp(1.2rem,2vw,1.6rem)}
+    label{display:block;font-size:.95rem;color:var(--muted);margin-bottom:.35rem}
+    input[type="text"],input[type="number"],select{width:100%;padding:.7rem .8rem;border-radius:.6rem;border:1px solid rgba(0,0,0,.12);background:transparent;color:var(--fg)}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:.8rem}
+    .col-12{grid-column:span 12}.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}
+    @media (max-width:860px){.row{grid-template-columns:repeat(6,1fr)}.col-6{grid-column:span 6}.col-4{grid-column:span 6}.col-3{grid-column:span 3}}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.1rem;border-radius:.8rem;border:none;cursor:pointer;background:var(--accent);color:#001a0f;font-weight:700;transition:transform .06s ease,filter .2s ease}
+    .btn.secondary{background:transparent;color:var(--fg);border:1px solid rgba(0,0,0,.15)}
+    .btn.ghost{background:transparent;color:var(--muted)}
+    .btn:hover{filter:brightness(.95)}.btn:active{transform:translateY(1px) scale(.99)}
+    .tag{font-size:.8rem;padding:.2rem .5rem;border-radius:.5rem;background:rgba(255,255,255,.08);color:var(--muted)}
+    .inline{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+    .divider{height:1px;background:rgba(0,0,0,.15);margin:10px 0}
+    .hidden{display:none !important}
+
+    /* Avatares */
+    .avatar-picker{display:flex;gap:.4rem;flex-wrap:wrap}
+    .avatar{font-size:1.5rem;padding:.35rem .5rem;border-radius:.6rem;border:1px solid transparent;cursor:pointer;transition:.15s}
+    .avatar.selected{border-color:var(--accent);background:rgba(255,255,255,.08)}
+
+    /* Quiz */
+    #answer-buttons{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+    @media (max-width:720px){#answer-buttons{grid-template-columns:1fr}}
+    .answer{padding:.85rem 1rem;border-radius:.8rem;background:rgba(255,255,255,.06);border:1px solid rgba(0,0,0,.08);color:var(--fg);cursor:pointer;transition:.15s;text-align:left}
+    .answer:hover{background:rgba(255,255,255,.12)}.answer.correct{background:var(--good);color:#001a0f}.answer.incorrect{background:var(--bad);color:#fff}
+    .progress-wrap{width:100%;background:rgba(0,0,0,.08);border-radius:.6rem;overflow:hidden;height:10px}
+    .progress{height:100%;background:var(--info);width:0%;transition:width .25s ease}
+    .hud{display:flex;gap:.6rem;align-items:center;justify-content:space-between;margin:.4rem 0 1rem;flex-wrap:wrap}
+    .lives{display:flex;gap:.25rem}.life{width:16px;height:16px;border-radius:50%;background:var(--bad);opacity:.35}.life.on{opacity:1}
+    .toast{position:fixed;bottom:16px;right:16px;background:rgba(0,0,0,.6);color:#fff;padding:10px 12px;border-radius:10px;font-size:.9rem;backdrop-filter:blur(6px)}
+    .watermark{position:fixed;top:10px;left:50%;transform:translateX(-50%);opacity:.6;font-size:.9rem}
+  </style>
+</head>
+<body data-theme="oscuro">
+  <div class="container">
+    <!-- START -->
+    <section id="start" class="card">
+      <h1 style='font-size:2.8rem;text-align:center'>Universitary</h1>
+      <div class="row">
+        <div class="col-6">
+          <label>Nombre del jugador</label>
+          <input id="player1" type="text" placeholder="Tu nombre" />
+        </div>
+        <div class="col-6 inline" style="margin-top:1.7rem">
+          <input id="twoPlayers" type="checkbox"><label for="twoPlayers">Modo 2 jugadores (turnos)</label>
+        </div>
+        <div id="p2wrap" class="col-6 hidden">
+          <label>Nombre del jugador 2</label>
+          <input id="player2" type="text" placeholder="Segundo jugador" />
+        </div>
+
+        <div class="col-4">
+          <label>Tema</label>
+          <select id="theme">
+            <option value="oscuro">Oscuro</option>
+            <option value="claro">Claro</option>
+            <option value="neon">Neón</option>
+            <option value="gamer">Gamer</option>
+          </select>
+        </div>
+        <div class="col-4">
+          <label>Modo</label>
+          <div class="inline">
+            <label><input type="radio" name="mode" value="practice" checked> Práctica</label>
+            <label><input type="radio" name="mode" value="exam"> Examen</label>
+          </div>
+        </div>
+        <div class="col-4">
+          <label>Dificultad objetivo</label>
+          <select id="difficulty">
+            <option value="all">Automática</option>
+            <option value="easy">Fácil</option>
+            <option value="medium">Media</option>
+            <option value="hard">Difícil</option>
+          </select>
+        </div>
+        <div class="col-4">
+          <label>Categoría</label>
+          <select id="category">
+            <option value="all">Todas</option>
+            <option value="obligacion">Obligación</option>
+            <option value="permiso">Permiso</option>
+            <option value="habilidad">Habilidad</option>
+            <option value="probabilidad">Probabilidad</option>
+            <option value="consejo">Consejo</option>
+          </select>
+        </div>
+        <div class="col-4">
+          <label>N° de preguntas</label>
+          <input id="qcount" type="number" min="5" max="60" value="8" />
+        </div>
+        <div class="col-4">
+          <label>Contrarreloj</label>
+          <div class="inline">
+            <input id="useTimer" type="checkbox" />
+            <input id="secPerQ" type="number" min="5" max="60" value="20" style="max-width:100px" />
+            <span class="tag">seg/pregunta</span>
+          </div>
+        </div>
+        <div class="col-4">
+          <label>Vidas</label>
+          <input id="lives" type="number" min="0" max="5" value="2" />
+        </div>
+        <div class="col-12">
+          <label>Avatar Jugador 1</label>
+          <div id="avatars1" class="avatar-picker"></div>
+        </div>
+        <div class="col-12 hidden" id="avatars2wrap">
+          <label>Avatar Jugador 2</label>
+          <div id="avatars2" class="avatar-picker"></div>
+        </div>
+
+        <div class="col-12">
+          <div class="inline">
+            <button id="startBtn" class="btn">▶️ Comenzar</button>
+            <button id="showcaseUnifiedBtn" class="btn secondary">🎬 Showcase Unificado (1P → 2P)</button>
+            <button id="clearScores" class="btn ghost">🗑 Borrar puntuaciones</button>
+          </div>
+          <small class="tag">El Showcase recorre temas y opciones, juega 1 partida 1P y luego 2P.</small>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="col-12">
+          <label>Enlace público para que la audiencia juegue (pega tu URL)</label>
+          <input id="audienceUrl" type="text" placeholder="https://tusitio.com/universitary.html" />
+          <div class="inline" style="margin-top:.6rem">
+            <button id="showQR" class="btn secondary">📱 Mostrar QR para la audiencia</button>
+            <button id="copyLink" class="btn ghost">🔗 Copiar enlace</button>
+          </div>
+          <small class="tag">Tip: Súbelo a GitHub Pages / Netlify / Vercel, o sirve en tu red local y pega la URL aquí.</small>
+        </div>
+      </div>
+      <div id="highscores" class="divider"></div>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quiz" class="card hidden">
+      <div class="hud">
+        <div class="inline">
+          <span id="playerBadge" class="tag">👤 —</span>
+          <span id="modeBadge" class="tag">Modo</span>
+          <span id="catBadge" class="tag">Cat</span>
+          <span id="diffBadge" class="tag">Dif</span>
+          <span id="streakBadge" class="tag">🔥 Racha 0</span>
+          <span id="multBadge" class="tag">✖️ x1</span>
+        </div>
+        <div class="inline">
+          <span id="timerLabel" class="tag">⏱ 00</span>
+          <div class="lives" id="livesWrap"></div>
+        </div>
+      </div>
+      <div class="progress-wrap"><div id="progress" class="progress"></div></div>
+      <h2 id="questionText">—</h2>
+      <div id="preTip" class="tag hidden"></div>
+      <div id="answer-buttons"></div>
+      <div id="feedback" style="min-height:1.2rem;margin-top:.6rem;font-weight:600"></div>
+      <div class="inline" style="justify-content:space-between;margin-top:.6rem">
+        <small class="tag">Elige la opción correcta…</small>
+        <button id="nextBtn" class="btn secondary hidden">Siguiente ▶</button>
+      </div>
+    </section>
+
+    <!-- END -->
+    <section id="end" class="card hidden">
+      <h2>🏁 Resultados</h2>
+      <div id="results"></div>
+      <div class="divider"></div>
+      <div class="inline">
+        <button id="retryBtn" class="btn">🔁 Jugar otra vez</button>
+        <button id="menuBtn" class="btn secondary">🏠 Menú</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <div id="wm" class="watermark hidden">Showcase activo</div>
+
+  <script>
+    // ====== Helpers ======
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const byId = id => document.getElementById(id);
+    function toast(msg, ms=1800){ const t=byId('toast'); t.textContent=msg; t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'),ms); }
+    function vibrate(p=[40]){ if('vibrate' in navigator) navigator.vibrate(p); }
+    function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+    const norm = s => (s||'').toString().trim().toLowerCase();
+
+    // ====== Password for clearing scores ======
+    const CLEAR_PWD = "Uni2025!";
+    // ====== Theme ======
+    const themeSel = byId('theme');
+    const savedTheme = localStorage.getItem('quizThemeUnified') || 'oscuro';
+    document.body.setAttribute('data-theme', savedTheme);
+    themeSel.value = savedTheme;
+    themeSel.addEventListener('change', ()=>{ document.body.setAttribute('data-theme', themeSel.value); localStorage.setItem('quizThemeUnified', themeSel.value); });
+
+    // Avatares
+    const AVATARS = ['🦊','🐯','🐺','🐶','🐱','🦄','🐲','🐼','👩‍🎓','👨‍🎓','🎮','🚀','🔥','✨','🏎️','🛰️'];
+    let avatar1 = AVATARS[0], avatar2 = AVATARS[1];
+    function renderAvatars(containerId, current, setter){
+      const cont = byId(containerId); cont.innerHTML='';
+      AVATARS.forEach(a=>{
+        const d=document.createElement('div'); d.className='avatar'; d.textContent=a;
+        if(a===current()) d.classList.add('selected');
+        d.addEventListener('click', ()=>{ setter(a); renderAvatars(containerId, current, setter); });
+        cont.appendChild(d);
+      });
+    }
+    renderAvatars('avatars1', ()=>avatar1, v=>avatar1=v);
+    renderAvatars('avatars2', ()=>avatar2, v=>avatar2=v);
+
+    // Base bank
+    const BASE_BANK = [
+      {type:'choice',question:"You ___ study for the test. It's important!",options:['can','must','may','might'],correct:'must',explanation:"Obligación fuerte → 'must'.",difficulty:'easy',category:'obligacion'},
+      {type:'choice',question:"I ___ swim when I was five years old.",options:['must','can','could','should'],correct:'could',explanation:"Habilidad en pasado → 'could'.",difficulty:'easy',category:'habilidad'},
+      {type:'choice',question:"You ___ smoke here. It’s a non-smoking area.",options:['must','may',"can't",'should'],correct:"can't",explanation:"Prohibición → 'can't'.",difficulty:'easy',category:'permiso'},
+      {type:'choice',question:"___ I borrow your pen?",options:['May','Must','Should','Might'],correct:'May',explanation:"Pedir permiso → 'May I...?'.",difficulty:'medium',category:'permiso'},
+      {type:'choice',question:"They ___ be home. The lights are on.",options:['might','can','must','could'],correct:'must',explanation:"Inferencia fuerte → 'must'.",difficulty:'medium',category:'probabilidad'},
+      {type:'choice',question:"He ___ be the new teacher. I'm not sure.",options:['might','must','can','should'],correct:'might',explanation:"Probabilidad baja → 'might'.",difficulty:'medium',category:'probabilidad'},
+      {type:'choice',question:"You ___ eat more vegetables.",options:['should','can','might','must'],correct:'should',explanation:"Consejo → 'should'.",difficulty:'easy',category:'consejo'},
+      {type:'choice',question:"Drivers ___ stop at a red light.",options:['must','might','could','may'],correct:'must',explanation:"Regla/obligación → 'must'.",difficulty:'medium',category:'obligacion'},
+      {type:'choice',question:"When I was a child, I ___ stay up late on weekends.",options:['could','might','must','should'],correct:'could',explanation:"Hábito en pasado → 'could'.",difficulty:'medium',category:'habilidad'},
+      {type:'choice',question:"She ___ be at home; I called and no one answered.",options:['must',"can't",'might','should'],correct:"can't",explanation:"Inferencia negativa → 'can't'.",difficulty:'hard',category:'probabilidad'},
+      {type:'cloze',question:"You ___ have told me earlier. Now it's too late (___).",correct:'should',explanation:"Crítica sobre el pasado → should (have).",difficulty:'hard',category:'consejo'},
+      {type:'short',question:"Completa: '___ I open the window, please?' (permiso formal)",correct:'May',explanation:"Permiso formal → 'May I...?' ",difficulty:'medium',category:'permiso'}
+    ];
+
+    const UI = {
+      start: byId('start'), quiz: byId('quiz'), end: byId('end'),
+      p1: byId('player1'), p2: byId('player2'), twoPlayers: byId('twoPlayers'), p2wrap: byId('p2wrap'),
+      theme: byId('theme'),
+      difficulty: byId('difficulty'), category: byId('category'), qcount: byId('qcount'),
+      useTimer: byId('useTimer'), secPerQ: byId('secPerQ'), lives: byId('lives'),
+      startBtn: byId('startBtn'), showcaseUnifiedBtn: byId('showcaseUnifiedBtn'), clearScores: byId('clearScores'),
+      playerBadge: byId('playerBadge'), modeBadge: byId('modeBadge'), catBadge: byId('catBadge'), diffBadge: byId('diffBadge'),
+      streakBadge: byId('streakBadge'), multBadge: byId('multBadge'),
+      timerLabel: byId('timerLabel'), livesWrap: byId('livesWrap'), progress: byId('progress'),
+      qText: byId('questionText'), answers: byId('answer-buttons'), preTip: byId('preTip'), feedback: byId('feedback'), nextBtn: byId('nextBtn'),
+      results: byId('results'), retryBtn: byId('retryBtn'), menuBtn: byId('menuBtn'),
+      highs: byId('highscores')
+    };
+
+    const State = {
+      bank: JSON.parse(JSON.stringify(BASE_BANK)),
+      filtered: [], order: [], cursor: 0,
+      players:['Jugador 1',''], avatars:['🦊','🐯'], twoPlayers:false, turn:0,
+      score:[0,0], streak:0, mult:1,
+      answers:[[],[]],
+      mode:'practice', difficulty:'all', category:'all',
+      useTimer:false, secPerQ:20, timer:null, tLeft:0,
+      livesMax:2, lives:[2,2], totalQ:8,
+      autoAdvance:true, nextTimer:null,
+      showcasing:false
+    };
+
+    UI.twoPlayers.addEventListener('change', ()=>{
+      const on = UI.twoPlayers.checked;
+      UI.p2wrap.classList.toggle('hidden', !on);
+      byId('avatars2wrap').classList.toggle('hidden', !on);
+    });
+
+    function showHighScores(){
+      const scores = JSON.parse(localStorage.getItem('modalHighScoresUnified')||'[]');
+      const list = scores.map((s,i)=>`<li>${i+1}. ${s.name} — <strong>${s.score}</strong> <small>(${s.date})</small></li>`).join('');
+      UI.highs.innerHTML = `<h3>🏆 Mejores Puntuaciones</h3><ul>${list || '<li>Sin registros.</li>'}</ul>`;
+    }
+    showHighScores();
+
+    const Snd = (()=>{
+      let ctx=null; function ensure(){ ctx=ctx||new (window.AudioContext||window.webkitAudioContext)(); }
+      function beep(f=880, ms=120, type='sine', g=0.04){ if(State.showcasing) return; ensure(); const o=ctx.createOscillator(); const ga=ctx.createGain(); o.type=type;o.frequency.value=f; ga.gain.value=g; o.connect(ga).connect(ctx.destination); o.start(); setTimeout(()=>o.stop(),ms); }
+      return { correct(){beep(940,110,'sine',.05); setTimeout(()=>beep(1320,110,'sine',.045),100)}, wrong(){beep(220,160,'sawtooth',.06)}, tick(){beep(800,40,'square',.03)}, timeup(){beep(150,300,'square',.07)}, bonus(){beep(1200,140,'triangle',.05)} };
+    })();
+
+    function renderLives(){
+      UI.livesWrap.innerHTML=''; const lives = State.twoPlayers ? State.lives[State.turn] : State.lives[0];
+      for(let i=0;i<State.livesMax;i++){ const d=document.createElement('div'); d.className='life'+(i<lives?' on':''); UI.livesWrap.appendChild(d); }
+      UI.timerLabel.textContent = State.useTimer ? `⏱ ${State.secPerQ}s` : '⏱ —';
+    }
+
+    function tipFor(q){
+      const map={ obligacion:'Tip: obligación/regla → must / have to', permiso:'Tip: permiso → may / can / could', habilidad:'Tip: habilidad → can / could (pasado)', probabilidad:"Tip: probabilidad → might / could / must / can't", consejo:"Tip: consejo → should / shouldn't" };
+      return map[q.category]||'';
+    }
+
+    function currentQuestion(){ const idx = State.order[State.cursor]; return State.filtered[idx]; }
+
+    function markButtons(q, picked){
+      $$('#answer-buttons .answer').forEach(b=>{
+        const val = b.textContent.replace(/^\d+\. /,'').trim();
+        if(q.type==='choice'){ if(val===q.correct) b.classList.add('correct'); if(val===picked && val!==q.correct) b.classList.add('incorrect'); }
+        b.disabled = true;
+      });
+    }
+
+    function handleAnswer(ans, btn, q){
+      clearInterval(State.timer);
+      clearTimeout(State.nextTimer);
+      const ok = norm(ans) === norm(q.correct);
+      const p = State.turn;
+      const elapsed = State.useTimer ? (State.secPerQ - State.tLeft) : 0;
+
+      if(ok){ State.score[p] += 1*State.mult; Snd.correct(); } else { Snd.wrong(); vibrate([30]); }
+      State.answers[p].push({ q:q.question, picked: ans||'—', correct:q.correct, ok, explanation:q.explanation||'', type:q.type, time:elapsed });
+
+      if(State.mode==='practice'){
+        markButtons(q, ans);
+        UI.feedback.textContent = ok ? `✅ ¡Correcto! ${q.explanation||''}` : `❌ Incorrecto. ${q.explanation?('→ '+q.explanation):''}`;
+      }
+
+      if(ok){ State.streak++; if(State.streak%3===0){ State.mult=Math.min(3,State.mult+1); toast('🎯 Bonus x'+State.mult); } }
+      else { State.streak=0; State.mult=1; }
+      UI.streakBadge.textContent = `🔥 Racha ${State.streak}`;
+      UI.multBadge.textContent = `✖️ x${State.mult}`;
+
+      if(!ok && State.livesMax>0 && State.lives[p]>0){ State.lives[p]--; renderLives(); }
+
+      UI.nextBtn.classList.remove('hidden');
+      if(State.autoAdvance || State.showcasing){
+        State.nextTimer = setTimeout(()=>{ if(!UI.nextBtn.classList.contains('hidden')) nextTurnOrNext(); }, 1100);
+      }
+    }
+
+    function timeUp(q){
+      const p = State.turn;
+      State.answers[p].push({ q:q.question, picked:'⏰', correct:q.correct, ok:false, explanation:q.explanation||'', type:q.type, time:State.secPerQ });
+      if(State.livesMax>0 && State.lives[p]>0){ State.lives[p]--; renderLives(); }
+      UI.feedback.textContent = `⏰ Tiempo agotado. Respuesta: ${q.correct}. ${q.explanation||''}`;
+      UI.nextBtn.classList.remove('hidden');
+      clearTimeout(State.nextTimer);
+      if(State.autoAdvance || State.showcasing){
+        State.nextTimer = setTimeout(()=>{ if(!UI.nextBtn.classList.contains('hidden')) nextTurnOrNext(); }, 1100);
+      }
+    }
+
+    function nextTurnOrNext(){
+      UI.nextBtn.classList.add('hidden');
+      if(State.twoPlayers){ State.turn = 1 - State.turn; }
+      State.cursor++;
+      const finished = (State.cursor >= State.totalQ);
+      if(finished){ endGame(); } else { renderQuestion(); }
+    }
+
+    function renderQuestion(){
+      const q = currentQuestion(); if(!q) return endGame();
+      UI.qText.textContent = `${State.cursor+1}. ${q.question}`;
+      const showTip = (State.mode==='practice'); UI.preTip.textContent = showTip ? tipFor(q) : ''; UI.preTip.classList.toggle('hidden', !showTip);
+
+      UI.answers.innerHTML='';
+      if(q.type==='choice'){
+        const opts = shuffle([...q.options]);
+        opts.forEach((opt,i)=>{
+          const b=document.createElement('button'); b.className='answer'; b.textContent=`${i+1}. ${opt}`;
+          b.addEventListener('click', ()=>handleAnswer(opt, b, q)); UI.answers.appendChild(b);
+        });
+      } else {
+        const inp=document.createElement('input'); inp.type='text'; inp.placeholder='Escribe aquí…'; inp.className='answer';
+        const btn=document.createElement('button'); btn.className='btn'; btn.textContent='Responder';
+        btn.addEventListener('click', ()=>handleAnswer(inp.value.trim(), btn, q));
+        UI.answers.append(inp, btn);
+      }
+
+      UI.feedback.textContent = State.mode==='practice' ? 'Elige una opción…' : 'Responde y verás el resultado al final.';
+      UI.progress.style.width = `${(State.cursor/State.totalQ)*100}%`;
+      UI.nextBtn.classList.add('hidden');
+      clearTimeout(State.nextTimer);
+
+      // Timer
+      clearInterval(State.timer);
+      if(State.useTimer){
+        State.tLeft = State.secPerQ; UI.timerLabel.textContent = `⏱ ${State.tLeft}s`;
+        State.timer = setInterval(()=>{
+          State.tLeft--; if(State.tLeft<=5 && State.tLeft>0) Snd.tick();
+          UI.timerLabel.textContent = `⏱ ${State.tLeft}s`;
+          if(State.tLeft<=0){ clearInterval(State.timer); timeUp(q); }
+        },1000);
+      } else { UI.timerLabel.textContent = '⏱ —'; }
+
+      // HUD jugador con avatar
+      const icon = State.avatars[State.turn];
+      const name = State.players[State.turn];
+      UI.playerBadge.textContent = `${icon} ${name}`;
+      UI.modeBadge.textContent = (State.mode==='practice'?'Práctica':'Examen');
+      UI.catBadge.textContent = State.category==='all'?'Todas':State.category;
+      UI.diffBadge.textContent = State.difficulty==='all'?'Auto':State.difficulty;
+    }
+
+    function startGame(){
+      const p1 = UI.p1.value.trim() || 'Demo';
+      const two = UI.twoPlayers.checked;
+      const p2 = two ? (UI.p2.value.trim() || 'Player 2') : '';
+
+      State.players=[p1,p2];
+      State.avatars=[avatar1, two? avatar2 : ''];
+      State.twoPlayers = two; State.turn=0;
+
+      const mode = $$('input[name="mode"]:checked')[0].value;
+      State.mode=mode;
+      State.useTimer=UI.useTimer.checked; State.secPerQ=Math.max(5,Math.min(60,parseInt(UI.secPerQ.value)||20));
+      State.livesMax=Math.max(0,Math.min(5,parseInt(UI.lives.value)||0)); State.lives=[State.livesMax,State.livesMax];
+      State.totalQ=Math.max(5,Math.min(60,parseInt(UI.qcount.value)||8));
+      State.difficulty=UI.difficulty.value; State.category=UI.category.value;
+      State.score=[0,0]; State.streak=0; State.mult=1; State.answers=[[],[]]; State.cursor=0;
+
+      const pool = State.bank.filter(q => (State.category==='all'||q.category===State.category) && (State.difficulty==='all'||q.difficulty===State.difficulty));
+      if(pool.length===0) return alert('No hay preguntas para esos filtros.');
+      State.filtered = pool; State.order = shuffle(Array.from({length: pool.length}, (_,i)=>i)).slice(0, State.totalQ);
+
+      renderLives();
+      UI.progress.style.width='0%'; UI.feedback.textContent='';
+
+      document.body.classList.add('in-quiz');
+      UI.start.classList.add('hidden'); UI.end.classList.add('hidden'); UI.quiz.classList.remove('hidden');
+      renderQuestion();
+    }
+
+    function endGame(){
+      clearInterval(State.timer); clearTimeout(State.nextTimer);
+      UI.quiz.classList.add('hidden'); UI.end.classList.remove('hidden');
+      document.body.classList.remove('in-quiz');
+
+      if(!State.twoPlayers){
+        const scores = JSON.parse(localStorage.getItem('modalHighScoresUnified')||'[]');
+        scores.push({name:State.players[0], score:State.score[0], date:new Date().toLocaleString()});
+        scores.sort((a,b)=>b.score-a.score); if(scores.length>5) scores.length=5;
+        localStorage.setItem('modalHighScoresUnified', JSON.stringify(scores)); showHighScores();
+      }
+
+      function tableFor(i){
+        const rows = State.answers[i].map((a,idx)=>`
+          <tr><td style="text-align:center">${idx+1}</td>
+              <td>${a.q}</td><td style="text-align:center">${a.picked}</td>
+              <td style="text-align:center">${a.correct}</td><td style="text-align:center">${a.ok?'✅':'❌'}</td>
+              <td>${a.explanation||''}</td><td style="text-align:center">${(a.time||0).toFixed(1)}s</td></tr>`).join('');
+        const icon = State.avatars[i]||'👤';
+        return `<h3>${icon} ${State.players[i]||('Jugador '+(i+1))} — <span class="tag">Puntuación: ${State.score[i]} / ${State.totalQ}</span></h3>
+        <div style="max-height:260px;overflow:auto;border:1px solid rgba(0,0,0,.1);border-radius:8px">
+          <table style="width:100%;border-collapse:collapse"><thead><tr><th>#</th><th>Pregunta</th><th>Tu resp.</th><th>Correcta</th><th>OK</th><th>Explicación</th><th>Tiempo</th></tr></thead><tbody>${rows}</tbody></table>
+        </div>`;
+      }
+
+      let html='';
+      if(State.twoPlayers){
+        html += `<div class="row"><div class="col-6">${tableFor(0)}</div><div class="col-6">${tableFor(1)}</div></div>`;
+        html += (State.score[0]===State.score[1]) ? `<p class="tag">🤝 Empate</p>` : `<p class="tag">🏆 Ganador: ${(State.score[0]>State.score[1]?State.players[0]:State.players[1])}</p>`;
+      } else {
+        html += tableFor(0);
+      }
+      UI.results.innerHTML = html;
+
+      if(State.showcasing){ // vuelve al menú para seguir la secuencia
+        setTimeout(()=>{ UI.end.classList.add('hidden'); UI.start.classList.remove('hidden'); }, 1500);
+      }
+    }
+
+    // ===== Showcase Unificado (1P → 2P) =====
+    async function runShowcaseUnified(){
+      if(State.showcasing) return;
+      State.showcasing = true;
+      byId('wm').classList.remove('hidden');
+      toast('🎬 Showcase Unificado: temas, opciones, 1P y 2P', 2200);
+
+      // 1) Recorrer TEMAS y OPCIONES de forma visible en el menú
+      const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+      const themes = ['oscuro','claro','neon','gamer'];
+      for(const th of themes){
+        themeSel.value = th; document.body.setAttribute('data-theme', th);
+        toast('Tema: '+th.toUpperCase(), 1200);
+        await sleep(1600);
+      }
+
+      // Mostrar cambio de MODO (práctica ↔ examen)
+      $$('input[name="mode"]')[1].checked = true; toast('Modo: Examen', 1200); await sleep(1500);
+      $$('input[name="mode"]')[0].checked = true; toast('Modo: Práctica', 1200); await sleep(1500);
+
+      // Mostrar DIFICULTAD y CATEGORÍA
+      const diffs = ['all','easy','medium','hard'];
+      for(const d of diffs){ UI.difficulty.value=d; toast('Dificultad: '+(d==='all'?'Automática':d), 1000); await sleep(1200); }
+      const cats = ['all','obligacion','permiso','habilidad','probabilidad','consejo'];
+      for(const c of cats){ UI.category.value=c; toast('Categoría: '+c, 1000); await sleep(1000); }
+      UI.category.value='all';
+
+      // Contrarreloj y vidas
+      UI.useTimer.checked = true; toast('Contrarreloj: ON', 1100); await sleep(1200);
+      UI.secPerQ.value = 15; toast('Segundos por pregunta: 15', 1100); await sleep(1200);
+      UI.useTimer.checked = false; toast('Contrarreloj: OFF', 1100); await sleep(900);
+      UI.lives.value = 2; toast('Vidas: 2', 900); await sleep(900);
+
+      // N° preguntas
+      UI.qcount.value = 8; toast('Preguntas: 8', 900); await sleep(900);
+
+      // Mostrar 2 jugadores y avatares
+      UI.twoPlayers.checked = true; byId('avatars2wrap').classList.remove('hidden'); toast('2 Jugadores: habilitado', 1200); await sleep(1200);
+      UI.twoPlayers.checked = false; byId('avatars2wrap').classList.add('hidden'); toast('2 Jugadores: deshabilitado', 1200); await sleep(1200);
+
+      // 2) Partida 1 Jugador (Práctica, sin timer), auto-play
+      UI.p1.value = 'Showcase 1P';
+      UI.useTimer.checked = false;
+      UI.qcount.value = 6;
+      $$('input[name="mode"]')[0].checked = true; // práctica
+      startGame();
+      await autoplayRound(6);
+      await sleep(1800); // ver resultados
+
+      // 3) Partida 2 Jugadores (Práctica sin timer), auto-play turnado
+      UI.p1.value = 'Alice'; UI.p2.value = 'Bob';
+      UI.twoPlayers.checked = true; byId('avatars2wrap').classList.remove('hidden');
+      UI.useTimer.checked = false; UI.qcount.value = 6; UI.lives.value = 2;
+      $$('input[name="mode"]')[0].checked = true; // práctica
+      startGame();
+      await autoplayRound2P(6);
+      await sleep(1800);
+
+      // 4) Opcional: mostrar "Examen" brevemente (sin jugar)
+      UI.twoPlayers.checked = false; byId('avatars2wrap').classList.add('hidden');
+      $$('input[name="mode"]')[1].checked = true; toast('Vista de configuración en Modo Examen', 1800); await sleep(2000);
+
+      State.showcasing = false;
+      byId('wm').classList.add('hidden');
+    }
+
+    async function autoplayRound(n=8){
+      // Recorre n preguntas; alterna correcto/incorrecto para mostrar feedback
+      const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+      for(let i=0;i<n;i++){
+        if(UI.end.classList.contains('hidden')===false) break;
+        const q = currentQuestion(); if(!q) break;
+        if(q.type==='choice'){
+          const buttons = $$('#answer-buttons .answer');
+          if(buttons.length){
+            if(i%2===0){
+              const okBtn = Array.from(buttons).find(b=>b.textContent.trim().endsWith(q.correct)) || buttons[0];
+              okBtn.click();
+            } else {
+              const wrongBtn = Array.from(buttons).find(b=>!b.textContent.trim().endsWith(q.correct)) || buttons[0];
+              wrongBtn.click();
+            }
+          }
+        } else {
+          const inp = $$('#answer-buttons input')[0];
+          const btn = $$('#answer-buttons .btn')[0];
+          if(inp && btn){ if(i%2===0){ inp.value = q.correct; } else { inp.value = 'maybe'; } btn.click(); }
+        }
+        await sleep(1100);
+        if(!UI.nextBtn.classList.contains('hidden')) UI.nextBtn.click();
+        await sleep(700);
+      }
+    }
+
+    async function autoplayRound2P(n=8){
+      const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+      for(let i=0;i<n;i++){
+        if(UI.end.classList.contains('hidden')===false) break;
+        const q = currentQuestion(); if(!q) break;
+        if(q.type==='choice'){
+          const buttons = $$('#answer-buttons .answer');
+          if(buttons.length){
+            if(i%2===0){
+              const okBtn = Array.from(buttons).find(b=>b.textContent.trim().endsWith(q.correct)) || buttons[0];
+              okBtn.click();
+            } else {
+              const wrongBtn = Array.from(buttons).find(b=>!b.textContent.trim().endsWith(q.correct)) || buttons[0];
+              wrongBtn.click();
+            }
+          }
+        } else {
+          const inp = $$('#answer-buttons input')[0];
+          const btn = $$('#answer-buttons .btn')[0];
+          if(inp && btn){ if(i%2===0){ inp.value = q.correct; } else { inp.value = 'maybe'; } btn.click(); }
+        }
+        await sleep(1200);
+        if(!UI.nextBtn.classList.contains('hidden')) UI.nextBtn.click();
+        await sleep(900);
+      }
+    }
+
+    // ===== Borrar puntuaciones con clave =====
+    UI.clearScores.addEventListener('click', ()=>{
+      const pwd = prompt("Ingresa la clave para borrar las puntuaciones:");
+      if(pwd===null) return;
+      if(pwd===CLEAR_PWD){
+        localStorage.removeItem('modalHighScoresUnified'); toast('✅ Puntuaciones borradas');
+      } else {
+        alert('❌ Clave incorrecta');
+      }
+    });
+
+    // Events
+    byId('startBtn').addEventListener('click', startGame);
+    byId('showcaseUnifiedBtn').addEventListener('click', runShowcaseUnified);
+    byId('retryBtn').addEventListener('click', ()=>{ UI.end.classList.add('hidden'); UI.start.classList.remove('hidden'); document.body.classList.remove('in-quiz'); });
+    byId('menuBtn').addEventListener('click', ()=>{ UI.end.classList.add('hidden'); UI.start.classList.remove('hidden'); document.body.classList.remove('in-quiz'); });
+
+    
+    // ===== QR Audience Join =====
+    // Try to load QRCode library (optional). Fallback to Google Chart static image.
+    (function loadQRLIB(){
+      const s = document.createElement('script');
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+      s.async = true;
+      document.head.appendChild(s);
+    })();
+
+    const audienceUrlInput = byId('audienceUrl');
+    const qrOverlay = byId('qrOverlay');
+    const qrLink = byId('qrLink');
+    const qrImg = byId('qrimg');
+    const qrCanvasBox = byId('qrcanvas');
+
+    function openQROverlay(url){
+      if(!url || !/^https?:\/\//i.test(url)){
+        alert('Pega un enlace válido que comience con http:// o https://');
+        return;
+      }
+      qrLink.textContent = url;
+      qrOverlay.classList.remove('hidden');
+
+      // Prefer canvas QR if library loaded
+      qrCanvasBox.innerHTML = '';
+      qrImg.style.display = 'none';
+      try {
+        if(window.QRCode){
+          const size = Math.min(360, Math.floor(window.innerWidth*0.6));
+          new QRCode(qrCanvasBox, { text: url, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+        } else {
+          // fallback to google chart image
+          qrImg.src = "https://chart.googleapis.com/chart?cht=qr&chs=320x320&chl=" + encodeURIComponent(url);
+          qrImg.style.display = 'block';
+        }
+      } catch(e){
+        qrImg.src = "https://chart.googleapis.com/chart?cht=qr&chs=320x320&chl=" + encodeURIComponent(url);
+        qrImg.style.display = 'block';
+      }
+    }
+
+    byId('showQR').addEventListener('click', ()=> openQROverlay(audienceUrlInput.value.trim()));
+    byId('qrClose').addEventListener('click', ()=> qrOverlay.classList.add('hidden'));
+    byId('qrFullscreen').addEventListener('click', ()=>{
+      const el = byId('qrBox');
+      if(el.requestFullscreen) el.requestFullscreen();
+      else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    });
+
+    byId('copyLink').addEventListener('click', async ()=>{
+      const v = audienceUrlInput.value.trim();
+      if(!v){ toast('No hay enlace para copiar', 1200); return; }
+      try{ await navigator.clipboard.writeText(v); toast('🔗 Enlace copiado', 1400); }catch(e){ toast('No se pudo copiar', 1200); }
+    });
+
+    // Shortcuts
+    window.addEventListener('keydown', (e)=>{
+      const k = e.key.toLowerCase();
+      if(UI.quiz.classList.contains('hidden')) return;
+      const num = parseInt(k,10);
+      if(num>=1 && num<=4){
+        const btn = $$('#answer-buttons .answer')[num-1];
+        if(btn && !btn.disabled){
+          const val = btn.textContent.replace(/^\d+\. /, '');
+          const q = currentQuestion();
+          handleAnswer(val, btn, q);
+        }
+      }
+      if(k==='n' && !byId('nextBtn').classList.contains('hidden')) nextTurnOrNext();
+      if(k==='enter'){
+        const inp = $$('#answer-buttons input')[0];
+        if(inp){ const q=currentQuestion(); handleAnswer(inp.value.trim(), null, q); }
+      }
+    });
+  </script>
+
+  <div id="qrOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:50;">
+    <div class="card" style="max-width:720px;width:92%;text-align:center">
+      <h2 style="margin-top:0">Escanea para jugar</h2>
+      <p id="qrLink" class="tag" style="display:inline-block;padding:.35rem .6rem"></p>
+      <div id="qrBox" style="display:flex;align-items:center;justify-content:center;min-height:280px;margin:12px 0;">
+        <div id="qrcanvas"></div>
+        <img id="qrimg" alt="QR" style="display:none;max-width:320px" />
+      </div>
+      <div class="inline" style="justify-content:center">
+        <button id="qrClose" class="btn">Cerrar</button>
+        <button id="qrFullscreen" class="btn secondary">Pantalla completa</button>
+      </div>
+      <small class="tag" style="display:block;margin-top:.6rem">Si el QR no aparece, verifica tu conexión o usa el fallback de imagen.</small>
+    </div>
+  </div>
+
+</body>
+</html>
